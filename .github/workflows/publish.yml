@@ -25,6 +25,6 @@ jobs:
           file: Web/Dockerfile
           push: true
           secrets: |
-            github-username=Geneirodan
+            github-username=${{ secrets.PACKAGES_USERNAME }}
             github-token=${{ secrets.PACKAGES_TOKEN}}
           tags: geneirodan/decision-mate:${{ github.ref == 'refs/heads/main' && 'latest' || 'dev' }}

@@ -26,6 +26,9 @@ public static class DecisionGameEndpoints
         group.MapPost("/", CreateGame)
             .Produces<DecisionGameModel>(StatusCodes.Status201Created);
 
+        group.MapPatch("/{code}", JoinGame)
+            .Produces(StatusCodes.Status200OK);
+
         var idGroup = group.MapGroup("/{id:guid}")
             .ProducesProblem(StatusCodes.Status404NotFound);
 
@@ -44,13 +47,10 @@ public static class DecisionGameEndpoints
         idGroup.MapPatch("/play", PlayGame)
             .Produces(StatusCodes.Status200OK);
 
-        group.MapPatch("/{code}", JoinGame)
-            .Produces(StatusCodes.Status200OK);
-
-        group.MapDelete("/", DeleteGame)
+        idGroup.MapDelete("/", DeleteGame)
             .Produces(StatusCodes.Status200OK);
         
-        group.MapDelete("/leave", LeaveGame)
+        idGroup.MapDelete("/leave", LeaveGame)
             .Produces(StatusCodes.Status200OK);
         
         return group;

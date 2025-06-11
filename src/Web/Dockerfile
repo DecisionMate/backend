@@ -7,13 +7,13 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["src/Web/Web.csproj", "src/Web/"]
-COPY ["src/Infrastructure/Infrastructure.csproj", "src/Infrastructure/"]
-COPY ["src/Application/Application.csproj", "src/Application/"]
-COPY ["src/Domain/Domain.csproj", "src/Domain/"]
-RUN dotnet restore "src/Web/Web.csproj"
+COPY ["Web/Web.csproj", "Web/"]
+COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
+COPY ["Application/Application.csproj", "Application/"]
+COPY ["Domain/Domain.csproj", "Domain/"]
+RUN dotnet restore "Web/Web.csproj"
 COPY . .
-WORKDIR "/src/src/Web"
+WORKDIR "/src/Web"
 RUN dotnet build "./Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
