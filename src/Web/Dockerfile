@@ -7,20 +7,19 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["nuget.config", "src/"]
-COPY ["src/Directory.Build.props", "src/"]
-COPY ["src/Directory.Packages.props", "src/"]
-COPY ["src/Web/Web.csproj", "src/Web/"]
-COPY ["src/Infrastructure/Infrastructure.csproj", "src/Infrastructure/"]
-COPY ["src/Application/Application.csproj", "src/Application/"]
-COPY ["src/Domain/Domain.csproj", "src/Domain/"]
-RUN ls
+COPY ["Directory.Build.props", "/"]
+COPY ["Directory.Packages.props", "/"]
+COPY ["Web/Web.csproj", "Web/"]
+COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
+COPY ["Application/Application.csproj", "Application/"]
+COPY ["Domain/Domain.csproj", "Domain/"]
 RUN --mount=type=secret,id=github-username \
     --mount=type=secret,id=github-token \
-    dotnet nuget update source Github \
-                --username $(cat /run/secrets/github-username) \
-                --password $(cat /run/secrets/github-token) \
-                --store-password-in-clear-text
+    dotnet nuget add source "https://nuget.pkg.github.com/Geneirodan/index.json" \
+                    --name Github \
+                    --username $(cat /run/secrets/github-username) \
+                    --password $(cat /run/secrets/github-token) \
+                    --store-password-in-clear-text
 RUN dotnet restore "Web/Web.csproj"
 COPY . .
 WORKDIR /src/Web
