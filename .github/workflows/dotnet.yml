@@ -21,10 +21,10 @@ jobs:
         with:
           dotnet-version: 9.0.x
       
-      - name: Add new Github packages
+      - name: Update Github packages
         run: |
-          dotnet nuget update source "https://nuget.pkg.github.com/Geneirodan/index.json" \
-            --username Geneirodan \
+          dotnet nuget update source Github \
+            --username ${{ secrets.PACKAGES_USERNAME }} \
             --password ${{ secrets.PACKAGES_TOKEN }} \
             --store-password-in-clear-text
 
