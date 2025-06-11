@@ -1,0 +1,30 @@
+﻿name: Build and push Docker image to dockerhub
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Login to dockerhub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push to dockerhub
+        uses: docker/build-push-action@v6
+        with:
+          context: "{{defaultContext}}:src"
+          file: Web/Dockerfile
+          push: true
+          secrets: |
+            github-username=Geneirodan
+            github-token=${{ secrets.PACKAGES_TOKEN}}
+          tags: geneirodan/decision-mate:${{ github.ref == 'refs/heads/main' && 'latest' || 'dev' }}
