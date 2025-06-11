@@ -14,6 +14,7 @@ COPY ["src/Web/Web.csproj", "src/Web/"]
 COPY ["src/Infrastructure/Infrastructure.csproj", "src/Infrastructure/"]
 COPY ["src/Application/Application.csproj", "src/Application/"]
 COPY ["src/Domain/Domain.csproj", "src/Domain/"]
+RUN ls
 RUN --mount=type=secret,id=github-username \
     --mount=type=secret,id=github-token \
     dotnet nuget update source Github \
