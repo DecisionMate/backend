@@ -45,6 +45,7 @@ namespace Infrastructure.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     category_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    host_id = table.Column<Guid>(type: "uuid", nullable: false),
                     settings = table.Column<string>(type: "text", nullable: false),
                     code = table.Column<string>(type: "character varying(4)", maxLength: 4, nullable: true),
                     results = table.Column<string>(type: "jsonb", nullable: true)

@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20250605232508_Initial")]
+    [Migration("20250611210551_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -70,6 +70,10 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(4)
                         .HasColumnType("character varying(4)")
                         .HasColumnName("code");
+
+                    b.Property<Guid>("HostId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("host_id");
 
                     b.Property<string>("Settings")
                         .IsRequired()
@@ -129,7 +133,7 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("DecisionMate.Domain.Categories.Category", b =>
                 {
-                    b.OwnsMany("DecisionMate.Domain.Categories.Option", "Options", b1 =>
+                    b.OwnsMany("DecisionMate.Domain.Categories.Options.Option", "Options", b1 =>
                         {
                             b1.Property<Guid>("CategoryId")
                                 .HasColumnType("uuid")
@@ -221,7 +225,7 @@ namespace Infrastructure.Migrations
                                 .HasConstraintName("fk_players_user_profile_id");
                         });
 
-                    b.OwnsMany("DecisionMate.Domain.DecisionGames.ValueObjects.Result", "Results", b1 =>
+                    b.OwnsMany("DecisionMate.Domain.DecisionGames.ValueObjects.DecisionResult", "Results", b1 =>
                         {
                             b1.Property<Guid>("DecisionGameId")
                                 .HasColumnType("uuid");

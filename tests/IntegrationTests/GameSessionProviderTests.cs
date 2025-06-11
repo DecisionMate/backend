@@ -42,7 +42,8 @@ public sealed class GameSessionProviderTests : IntegrationTest
         result.ShouldBe(id);
     }
 
-    [Fact] public async Task GetGameSessionByCode_ShouldReturnNull_WhenCodeIsInvalid()
+    [Fact] 
+    public async Task GetGameSessionByCode_ShouldReturnNull_WhenCodeIsInvalid()
     {
         var id = await _gameSessionProvider.GetGameSessionByCodeAsync(new JoinCode("none"));
         id.ShouldBeNull();

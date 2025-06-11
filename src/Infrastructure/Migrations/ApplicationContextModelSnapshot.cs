@@ -68,6 +68,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("character varying(4)")
                         .HasColumnName("code");
 
+                    b.Property<Guid>("HostId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("host_id");
+
                     b.Property<string>("Settings")
                         .IsRequired()
                         .HasColumnType("text")
@@ -126,7 +130,7 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("DecisionMate.Domain.Categories.Category", b =>
                 {
-                    b.OwnsMany("DecisionMate.Domain.Categories.Option", "Options", b1 =>
+                    b.OwnsMany("DecisionMate.Domain.Categories.Options.Option", "Options", b1 =>
                         {
                             b1.Property<Guid>("CategoryId")
                                 .HasColumnType("uuid")
