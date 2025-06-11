@@ -4,4 +4,12 @@
     build:
       context: .
       dockerfile: src/Web/Dockerfile
+    secrets:
+      - github-username
+      - github-token
 
+secrets:
+  github-username:
+    environment: PACKAGES_USERNAME
+  github-token:
+    environment: PACKAGES_TOKEN
