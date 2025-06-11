@@ -21,8 +21,8 @@ jobs:
       - name: Build and push to dockerhub
         uses: docker/build-push-action@v6
         with:
-          context: "{{defaultContext}}:src"
-          file: Web/Dockerfile
+          context: "{{defaultContext}}:/"
+          file: src/Web/Dockerfile
           push: true
           secrets: |
             github-username=${{ secrets.PACKAGES_USERNAME }}
