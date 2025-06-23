@@ -1,3 +1,3 @@
 ﻿namespace DecisionMate.Web.UserProfiles;
 
-internal record AddUserProfileRequest(string Username);
+internal record AddUserProfileRequest(string Username, string? AvatarUrl);

@@ -4,12 +4,8 @@
     build:
       context: .
       dockerfile: src/Web/Dockerfile
-    secrets:
-      - github-username
-      - github-token
-
-secrets:
-  github-username:
-    environment: PACKAGES_USERNAME
-  github-token:
-    environment: PACKAGES_TOKEN
+    ports:
+      - "23451:8080"
+    environment:
+      - ConnectionStrings__Postgres=Host=host.docker.internal;Port=5432;Database=decision_mate_db;UserName=postgres;Password=postgres
+      - ConnectionStrings__Redis=host.docker.internal:6379

@@ -34,12 +34,6 @@ public sealed class GameSessionProvider(HybridCache cache) : IGameSessionProvide
         return str is null ? null : Guid.Parse(str);
     }
 
-    public async Task<JoinCode> GetOrCreateCodeAsync(Guid gameId, JoinCode? oldCode) =>
-        oldCode is not null &&
-        gameId == await GetGameSessionByCodeAsync(oldCode.Value).ConfigureAwait(false)
-            ? oldCode.Value
-            : await CreateCodeAsync(gameId).ConfigureAwait(false);
-
     public async Task RemoveCodeAsync(JoinCode code) =>
         await cache.RemoveAsync(GetKey(code)).ConfigureAwait(false);
 }

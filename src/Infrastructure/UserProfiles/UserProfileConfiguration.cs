@@ -1,5 +1,6 @@
 ﻿using DecisionMate.Domain.Common;
 using DecisionMate.Domain.Users;
+using DecisionMate.Domain.Users.ValueObjects;
 using DecisionMate.Infrastructure.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -14,10 +15,10 @@ public sealed class UserProfileConfiguration : IEntityTypeConfiguration<UserProf
         
         builder.Property(x => x.Id).ValueGeneratedNever();
 
-        builder.Property(o => o.Username)
+        builder.Property(o => o.UserName)
             .HasColumnName("username")
-            .HasMaxLength(UserProfile.Types.Username.MaxLength)
-            .HasConversion(x => x.Value, x => new UserProfile.Types.Username(x));
+            .HasMaxLength(UserName.MaxLength)
+            .HasConversion(x => x.Value, x => new UserName(x));
 
         builder.Property(x => x.AvatarUrl)
             .HasUrlToStringConversion()

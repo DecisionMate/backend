@@ -10,7 +10,7 @@ internal sealed class DecisionGameHub(IDecisionGameRepository gameRepository, IU
 {
     public async Task Subscribe(Guid gameId)
     {
-        if (user.Id is null)
+        if (user.Id == Guid.Empty)
         {
             await Clients.Caller.Error("Unauthorized");
             return;
@@ -31,6 +31,6 @@ internal sealed class DecisionGameHub(IDecisionGameRepository gameRepository, IU
 
         await Groups.AddToGroupAsync(Context.ConnectionId, gameId.ToString(), Context.ConnectionAborted);
 
-        await Clients.Group(gameId.ToString()).UserConnected(user.Id!.Value);
+        await Clients.Group(gameId.ToString()).UserConnected(user.Id);
     }
 }

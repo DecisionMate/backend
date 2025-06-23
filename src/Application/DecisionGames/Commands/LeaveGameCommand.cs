@@ -2,10 +2,12 @@
 using Geneirodan.Abstractions.Domain;
 using Geneirodan.Abstractions.Repositories;
 using Geneirodan.MediatR.Abstractions;
+using Geneirodan.MediatR.Attributes;
 using MediatR;
 
 namespace DecisionMate.Application.DecisionGames.Commands;
 
+[Authorize]
 public sealed record LeaveGameCommand(Guid GameId) : ICommand
 {
     public sealed class Handler(
@@ -17,17 +19,14 @@ public sealed record LeaveGameCommand(Guid GameId) : ICommand
     {
         public async Task<Result> Handle(LeaveGameCommand request, CancellationToken cancellationToken)
         {
-            if (user is not { Id: { } playerId })
-                return Result.Unauthorized();
-
             var game = await repository.FindAsync(request.GameId, cancellationToken).ConfigureAwait(false);
             if (game is null)
                 return Result.NotFound();
 
-            if (game.Players.All(x => x.Id != playerId))
+            if (game.Players.All(x => x.Id != user.Id))
                 return Result.Forbidden();
 
-            var @event = game.RemovePlayer(playerId);
+            var @event = game.RemovePlayer(user.Id);
 
             await repository.UpdateAsync(game, cancellationToken).ConfigureAwait(false);
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

@@ -11,7 +11,7 @@ public static class PropertyBuilderExtensions
     public static PropertyBuilder<Url?> HasUrlToStringConversion(this PropertyBuilder<Url?> propertyBuilder) =>
         propertyBuilder.HasConversion(
             x => x == null ? null : x.Value.Value,
-            x => x == null ? null : new Url(x)
+            x => Url.Create(x)
         );
 
     public static PropertyBuilder<T> HasJsonConversion<T>(this PropertyBuilder<T> propertyBuilder) =>

@@ -6,7 +6,7 @@ using static Riok.Mapperly.Abstractions.RequiredMappingStrategy;
 namespace DecisionMate.Application.Categories.Mappers;
 
 [Mapper]
-public static partial class OptionMapper
+public static partial class OptionMappingExtensions
 {
     [MapperRequiredMapping(Source)]
     public static partial Option Map(this OptionContract contract, int id);

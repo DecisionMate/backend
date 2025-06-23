@@ -14,13 +14,16 @@ public sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
     public void Configure(EntityTypeBuilder<Category> builder)
     {
         builder.ToTable("categories");
-        
+
         builder.Property(x => x.Name)
             .HasConversion(x => x.Value, x => new CategoryName(x))
             .HasMaxLength(CategoryName.MaxLength);
 
         builder.Property(x => x.Description)
-            .HasConversion(x => x.Value, x => new CategoryDescription(x))
+            .HasConversion(
+                x => x.HasValue ? x.Value.Value : null,
+                x => CategoryDescription.Create(x)
+            )
             .HasMaxLength(CategoryDescription.MaxLength);
 
         builder.Property(x => x.ImageUrl)

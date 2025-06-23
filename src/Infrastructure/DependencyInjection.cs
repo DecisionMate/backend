@@ -1,10 +1,6 @@
-﻿using DecisionMate.Application.Common;
-using DecisionMate.Infrastructure.Common;
-using FluentValidation;
-using Geneirodan.Abstractions.Mapping;
+﻿using FluentValidation;
 using Geneirodan.Abstractions.Repositories;
 using Geneirodan.EntityFrameworkCore;
-using Gridify;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,15 +14,14 @@ public static class DependencyInjection
                 .FromAssemblyOf<ApplicationContext>()
                 .AddClasses(c => c
                     .AssignableToAny(
-                        typeof(IEntityMapper<,>),
-                        typeof(IRepository<,>),
-                        typeof(IGridifyMapper<>)
+                        typeof(IRepository<,>)
+                        // typeof(IGridifyMapper<>)
                     )
                 )
                 .AsImplementedInterfaces()
                 .WithScopedLifetime()
             )
-            .AddScoped(typeof(IGridifyValidator<>), typeof(GridifyValidator<>))
+            // .AddScoped(typeof(IGridifyValidator<>), typeof(GridifyValidator<>))
             .AddValidatorsFromAssemblyContaining<ApplicationContext>()
             .AddDbContext<DbContext, ApplicationContext>(x => x.UseNpgsql(connectionString).UseSnakeCaseNamingConvention())
             .AddScoped<IUnitOfWork, UnitOfWork>();

@@ -4,11 +4,13 @@ using DecisionMate.Domain.DecisionGames.Exceptions;
 using DecisionMate.Domain.DecisionGames.ValueObjects;
 using Geneirodan.Abstractions.Repositories;
 using Geneirodan.MediatR.Abstractions;
+using Geneirodan.MediatR.Attributes;
 using MediatR;
 using Result = Ardalis.Result.Result;
 
 namespace DecisionMate.Application.DecisionGames.Commands;
 
+[Authorize]
 public sealed record PlayGameCommand(Guid GameId) : ICommand<IReadOnlyCollection<DecisionResult>>
 {
     public sealed class Handler(

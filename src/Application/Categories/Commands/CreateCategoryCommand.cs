@@ -19,19 +19,28 @@ public sealed record CreateCategoryCommand(
     string? ImageUrl
 ) : ICommand<CategoryModel>
 {
-    public sealed class Handler(IRepository<Category, Guid> repository, IUnitOfWork unitOfWork)
+    public sealed class Handler(IRepository<Category, Guid> repository, IUnitOfWork unitOfWork, IPublisher publisher)
         : IRequestHandler<CreateCategoryCommand, Result<CategoryModel>>
     {
-        public async Task<Result<CategoryModel>> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
+        public async Task<Result<CategoryModel>> Handle(CreateCategoryCommand request,
+            CancellationToken cancellationToken)
         {
-            var entity = request.MapToCategory();
+            var (entity, @event) = Category.Create(
+                name: new CategoryName(request.Name),
+                description: new CategoryDescription(request.Description),
+                options: request.Options.Map(),
+                imageUrl: Url.Create(request.ImageUrl)
+            );
+            
             entity = await repository.AddAsync(entity, cancellationToken).ConfigureAwait(false);
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await publisher.Publish(@event, cancellationToken).ConfigureAwait(false);
+            
             var response = entity.MapToModel();
             return Result<CategoryModel>.Created(response);
         }
     }
-    
+
     [UsedImplicitly]
     public sealed class Validator : AbstractValidator<CreateCategoryCommand>
     {
@@ -47,7 +56,7 @@ public sealed record CreateCategoryCommand(
 
             RuleFor(x => x.Options)
                 .ForEach(x => x.SetValidator(optionValidator));
-            
+
             RuleFor(x => x.ImageUrl)
                 .MaximumLength(Url.MaxLength)
                 .When(x => !string.IsNullOrEmpty(x.ImageUrl));

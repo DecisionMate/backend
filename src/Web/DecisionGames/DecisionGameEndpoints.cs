@@ -21,7 +21,8 @@ public static class DecisionGameEndpoints
             .WithTags(nameof(DecisionGame))
             .WithDescription("Endpoints for the decision games.")
             .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesValidationProblem();
+            .ProducesValidationProblem()
+            .RequireAuthorization();
 
         group.MapPost("/", CreateGame)
             .Produces<DecisionGameModel>(StatusCodes.Status201Created);

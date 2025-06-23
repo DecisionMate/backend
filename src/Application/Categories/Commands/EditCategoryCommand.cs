@@ -3,6 +3,7 @@ using DecisionMate.Application.Categories.Contracts;
 using DecisionMate.Application.Categories.Mappers;
 using DecisionMate.Domain.Categories;
 using DecisionMate.Domain.Categories.ValueObjects;
+using DecisionMate.Domain.Common;
 using FluentValidation;
 using Geneirodan.Abstractions.Repositories;
 using Geneirodan.MediatR.Abstractions;
@@ -19,7 +20,7 @@ public sealed record EditCategoryCommand(
     string? ImageUrl
 ) : ICommand<CategoryModel>
 {
-    public sealed class Handler(IRepository<Category, Guid> repository, IUnitOfWork unitOfWork)
+    public sealed class Handler(IRepository<Category, Guid> repository, IUnitOfWork unitOfWork, IPublisher publisher)
         : IRequestHandler<EditCategoryCommand, Result<CategoryModel>>
     {
         public async Task<Result<CategoryModel>> Handle(EditCategoryCommand request,
@@ -28,9 +29,18 @@ public sealed record EditCategoryCommand(
             var entity = await repository.FindAsync(request.Id, cancellationToken).ConfigureAwait(false);
             if (entity is null)
                 return Result<CategoryModel>.NotFound();
-            request.MapToCategory(entity);
+            
+            var @event = entity.Edit(
+                name: new CategoryName(request.Name),
+                description: new CategoryDescription(request.Description),
+                options: request.Options.Map(),
+                imageUrl: Url.Create(request.ImageUrl)
+            );
+            
             await repository.UpdateAsync(entity, cancellationToken).ConfigureAwait(false);
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await publisher.Publish(@event, cancellationToken).ConfigureAwait(false);
+            
             return entity.MapToModel();
         }
     }

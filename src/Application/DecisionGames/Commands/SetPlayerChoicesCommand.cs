@@ -5,12 +5,14 @@ using FluentValidation;
 using Geneirodan.Abstractions.Domain;
 using Geneirodan.Abstractions.Repositories;
 using Geneirodan.MediatR.Abstractions;
+using Geneirodan.MediatR.Attributes;
 using JetBrains.Annotations;
 using MediatR;
 using Result = Ardalis.Result.Result;
 
 namespace DecisionMate.Application.DecisionGames.Commands;
 
+[Authorize]
 public sealed record SetPlayerChoicesCommand(Guid GameId, int[] Choices) : ICommand
 {
     public sealed class Handler(
@@ -22,16 +24,13 @@ public sealed record SetPlayerChoicesCommand(Guid GameId, int[] Choices) : IComm
     {
         public async Task<Result> Handle(SetPlayerChoicesCommand request, CancellationToken cancellationToken)
         {
-            if (user is not { Id: { } playerId })
-                return Result.Unauthorized();
-
             var (gameId, choices) = request;
 
             var game = await repository.FindAsync(gameId, cancellationToken).ConfigureAwait(false);
             if (game is null)
                 return Result.NotFound();
 
-            if (game.Players.All(x => x.Id != playerId))
+            if (game.Players.All(x => x.Id != user.Id))
                 return Result.Conflict();
 
             if (game.Settings.TopSize != choices.Length)
@@ -45,10 +44,12 @@ public sealed record SetPlayerChoicesCommand(Guid GameId, int[] Choices) : IComm
                 return Result.Invalid(validationError);
             }
 
-            var @event = game.SetPlayerChoices(playerId, [..choices]);
+            var @event = game.SetPlayerChoices(user.Id, [..choices]);
+            
             await repository.UpdateAsync(game, cancellationToken).ConfigureAwait(false);
             await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             await publisher.Publish(@event, cancellationToken).ConfigureAwait(false);
+            
             return Result.Success();
         }
     }

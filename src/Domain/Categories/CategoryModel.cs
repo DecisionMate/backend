@@ -7,7 +7,7 @@ namespace DecisionMate.Domain.Categories;
 public sealed record CategoryModel(
     Guid Id,
     string Name,
-    string Description,
+    string? Description,
     string? ImageUrl,
     OptionModel[] Options
 );

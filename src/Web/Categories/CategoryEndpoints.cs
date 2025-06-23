@@ -1,12 +1,15 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using Ardalis.Result;
 using DecisionMate.Application.Categories.Commands;
 using DecisionMate.Application.Categories.Queries;
+using DecisionMate.Application.Common;
 using DecisionMate.Domain.Categories;
+using DecisionMate.Integrations;
 using Geneirodan.Abstractions.Repositories;
 using Geneirodan.AspNetCore;
-using Gridify;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using IResult = Microsoft.AspNetCore.Http.IResult;
 
 namespace DecisionMate.Web.Categories;
 
@@ -41,7 +44,26 @@ public static class CategoryEndpoints
         idGroup.MapDelete("/", DeleteCategory)
             .Produces(StatusCodes.Status200OK);
 
+        group.MapGet("/movies", GetMovieCategory)
+            .Produces<CategoryModel>();
+
         return group;
+    }
+
+    private static async Task<IResult> GetMovieCategory(
+        [FromServices] IMoviesCategoryProvider provider,
+        int count,
+        string? withGenres = null,
+        string? withoutGenres = null,
+        string? withCountries = null,
+        string? withoutCountries = null,
+        int? startYear = null,
+        int? endYear = null,
+        CancellationToken cancellationToken = default)
+    {
+        var category = await provider.GetCategoryAsync(count, withGenres, withoutGenres, withCountries,
+            withoutCountries, startYear, endYear, cancellationToken);
+        return category.MapResult();
     }
 
     private static async Task<IResult> GetCategory(
@@ -56,12 +78,14 @@ public static class CategoryEndpoints
     }
 
     private static async Task<IResult> GetCategories(
-        [AsParameters] GridifyQuery parameters,
         [FromServices] ISender sender,
-        CancellationToken token
+        [FromQuery] string searchTerm = "",
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken token = default
     )
     {
-        var query = new GetCategoriesQuery(parameters);
+        var query = new GetCategoriesQuery(searchTerm, new Pagination(page, pageSize));
         var result = await sender.Send(query, token);
         return result.MapResult();
     }

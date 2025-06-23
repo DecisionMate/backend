@@ -43,13 +43,14 @@ public sealed class DecisionGame : AggregateRoot
         init => _players = value.ToHashSet();
     }
 
-    public static (DecisionGame, GameCreatedEvent) Create(Guid categoryId, GameSettings settings)
+    public static (DecisionGame, GameCreatedEvent) Create(Guid categoryId, GameSettings settings, Guid   hostId)
     {
         var game = new DecisionGame
         {
             Id = Guid.CreateVersion7(),
             CategoryId = categoryId,
-            Settings = settings
+            Settings = settings,
+            HostId = hostId
         };
         var @event = new GameCreatedEvent(game.Id, game.CategoryId, game.Settings);
         game.AddEvent(@event);
@@ -129,12 +130,15 @@ public sealed class DecisionGame : AggregateRoot
         [UsedImplicitly]
         public sealed class ChoicesArray(ReadOnlySpan<int> choices) : ReadOnlyArray<int>(choices), IChoices
         {
-            public static IChoices Create(ReadOnlySpan<int> choices)
-            {
-                return new ChoicesArray(choices);
-            }
+            public static IChoices Create(ReadOnlySpan<int> choices) => new ChoicesArray(choices);
         }
     }
 
-    public GameDeletedEvent Delete() => new(Id);
+    public GameDeletedEvent Delete()
+    {
+        IsDeleted = true;
+        var @event = new GameDeletedEvent(Id);
+        AddEvent(@event);
+        return @event;
+    }
 }

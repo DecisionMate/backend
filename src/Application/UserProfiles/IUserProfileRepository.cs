@@ -1,7 +1,7 @@
 ﻿using Ardalis.Result;
+using DecisionMate.Application.Common;
 using DecisionMate.Domain.Users;
 using Geneirodan.Abstractions.Repositories;
-using Gridify;
 
 namespace DecisionMate.Application.UserProfiles;
 
@@ -9,7 +9,7 @@ public interface IUserProfileRepository : IRepository<UserProfile, Guid>
 {
     Task<Result<PageModel<UserListModel>>> SearchProfilesAsync(
         string username,
-        IGridifyPagination query, 
+        IPagination query, 
         CancellationToken cancellationToken
         );
 }

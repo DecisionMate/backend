@@ -1,22 +1,84 @@
 ﻿using DecisionMate.Domain.Categories.Options;
 using DecisionMate.Domain.Categories.ValueObjects;
 using DecisionMate.Domain.Common;
-using Geneirodan.Abstractions.Domain;
 
 namespace DecisionMate.Domain.Categories;
 
-public sealed class Category : Entity<Guid>
+public sealed class Category : AggregateRoot
 {
-    public CategoryName Name { get; set; }
-    public CategoryDescription Description { get; set; }
-    public Url? ImageUrl { get; set; }
+    private CategoryDescription? _description;
+    private Url? _imageUrl;
+    private CategoryName _name;
 
     private HashSet<Option> _options = [];
+
+    public bool ReadOnly { get; init; }
+    
+    public CategoryName Name
+    {
+        get => _name;
+        init => _name = value;
+    }
+
+    public CategoryDescription? Description
+    {
+        get => _description;
+        init => _description = value;
+    }
+
+    public Url? ImageUrl
+    {
+        get => _imageUrl;
+        init => _imageUrl = value;
+    }
 
     public IReadOnlySet<Option> Options
     {
         get => _options;
-        set => _options = value.ToHashSet();
+        init => _options = value.ToHashSet();
     }
 
+    public static (Category category, CategoryCreatedEvent @event) Create(
+        CategoryName name,
+        CategoryDescription description,
+        IReadOnlySet<Option> options,
+        Url? imageUrl
+    )
+    {
+        var category = new Category
+        {
+            Id = Guid.CreateVersion7(),
+            Name = name,
+            Description = description,
+            ImageUrl = imageUrl,
+            Options = options
+        };
+        var @event = new CategoryCreatedEvent(category.Id, category.Name, category.Description, category.ImageUrl);
+        category.AddEvent(@event);
+        return (category, @event);
+    }
+
+    public CategoryUpdatedEvent Edit(
+        CategoryName name,
+        CategoryDescription description,
+        IReadOnlySet<Option> options,
+        Url? imageUrl
+    )
+    {
+        _name = name;
+        _description = description;
+        _imageUrl = imageUrl;
+        _options = options.ToHashSet();
+        var @event = new CategoryUpdatedEvent(Id, Name, Description, ImageUrl);
+        AddEvent(@event);
+        return @event;
+    }
+
+    public CategoryDeletedEvent Delete()
+    {
+        IsDeleted = true;
+        var @event = new CategoryDeletedEvent(Id);
+        AddEvent(@event);
+        return @event;
+    }
 }

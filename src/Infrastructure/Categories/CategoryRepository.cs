@@ -1,47 +1,84 @@
 ﻿using Ardalis.Result;
+using Dapper;
 using DecisionMate.Application.Categories;
+using DecisionMate.Application.Categories.Mappers;
+using DecisionMate.Application.Common;
 using DecisionMate.Domain.Categories;
-using Geneirodan.Abstractions.Mapping;
 using Geneirodan.Abstractions.Repositories;
 using Geneirodan.EntityFrameworkCore;
-using Gridify;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 
 namespace DecisionMate.Infrastructure.Categories;
 
 [UsedImplicitly]
-public sealed class CategoryRepository(
-    DbContext context,
-    IEntityMapper<Category, CategoryListModel> listMapper,
-    IGridifyMapper<Category> gridifyMapper,
-    IEntityMapper<Category, CategoryModel> viewModelMapper
-) : Repository<Category, Guid>(context), ICategoryRepository
+public sealed class CategoryRepository(DbContext context) : Repository<Category, Guid>(context), ICategoryRepository
 {
+    private readonly DbContext _context = context;
+
     public override Task<Category?> FindAsync(Guid id, CancellationToken token = default) =>
         base.FindAsync(Set.Include(x => x.Options), id, token);
 
     public async Task<Result<PageModel<CategoryListModel>>> GetCategories(
-        GridifyQuery query, 
+        string searchTerm,
+        IPagination pagination,
         CancellationToken cancellationToken
-        )
+    )
     {
-        var queryable = Set.GridifyQueryable(query, gridifyMapper);
-        var entities = await listMapper.Map(queryable.Query).ToArrayAsync(cancellationToken).ConfigureAwait(false);
+        var dbConnection = _context.Database.GetDbConnection();
+        var command = CreateSearchCommand(searchTerm, pagination, cancellationToken);
+        var models = await dbConnection.QueryAsync<CategoryListModel>(command).ConfigureAwait(false);
+        var countCommand = CreateCountCommand(searchTerm, cancellationToken);
         return new PageModel<CategoryListModel>
         {
-            Items = entities,
-            Page = query.Page,
-            PageSize = query.PageSize,
-            TotalCount = queryable.Count
+            Items = models.ToArray(),
+            Page = pagination.Page,
+            PageSize = pagination.PageSize,
+            TotalCount = await dbConnection.ExecuteScalarAsync<int>(countCommand).ConfigureAwait(false)
         };
     }
+
+    private static CommandDefinition CreateSearchCommand(
+        string name,
+        IPagination pagination,
+        CancellationToken cancellationToken
+    ) =>
+        new(
+            commandText: """
+                         SELECT id, name, description, image_url as imageUrl
+                         FROM categories
+                         WHERE name ILIKE (@name)
+                         LIMIT @pageSize 
+                         OFFSET @page
+                         """,
+            parameters: new
+            {
+                name = $"%{name}%",
+                page = (pagination.Page - 1) * pagination.PageSize,
+                pageSize = pagination.PageSize
+            },
+            cancellationToken: cancellationToken
+        );
+
+    private static CommandDefinition CreateCountCommand(string name, CancellationToken cancellationToken) =>
+        new(
+            commandText: """
+                         SELECT COUNT(*) 
+                         FROM categories
+                         WHERE name ILIKE (@name)
+                         """,
+            parameters: new
+            {
+                name = $"%{name}%"
+            },
+            cancellationToken: cancellationToken
+        );
 
     public async Task<CategoryModel?> GetCategory(Guid id, CancellationToken cancellationToken) =>
         await Set.AsNoTracking()
             .Where(x => x.Id.Equals(id))
             .Include(x => x.Options)
-            .ProjectTo<Category, CategoryModel>(viewModelMapper)
-            .SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-
+            .Select(x => x.MapToModel())
+            .SingleOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
 }

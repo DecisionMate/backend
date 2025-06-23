@@ -4,6 +4,7 @@ using FluentValidation;
 using Geneirodan.Abstractions.Domain;
 using Geneirodan.Abstractions.Repositories;
 using Geneirodan.MediatR.Abstractions;
+using Geneirodan.MediatR.Attributes;
 using JetBrains.Annotations;
 using MediatR;
 using static DecisionMate.Domain.DecisionGames.DecisionGame;
@@ -11,6 +12,7 @@ using Result = Ardalis.Result.Result;
 
 namespace DecisionMate.Application.DecisionGames.Commands;
 
+[Authorize]
 public sealed record JoinGameCommand(string Code) : ICommand
 {
     public sealed class Handler(
@@ -23,9 +25,6 @@ public sealed record JoinGameCommand(string Code) : ICommand
     {
         public async Task<Result> Handle(JoinGameCommand request, CancellationToken cancellationToken)
         {
-            if (user is not { Id: { } playerId })
-                return Result.Unauthorized();
-
             var joinCode = new JoinCode(request.Code);
             var gameId = await provider.GetGameSessionByCodeAsync(joinCode).ConfigureAwait(false);
             if (gameId is null)
@@ -35,10 +34,10 @@ public sealed record JoinGameCommand(string Code) : ICommand
             if (game is null)
                 return Result.NotFound();
 
-            if (game.Players.Any(x => x.Id == playerId))
+            if (game.Players.Any(x => x.Id == user.Id))
                 return Result.Conflict();
 
-            var player = new Player { Id = playerId };
+            var player = new Player { Id = user.Id };
             var @event = game.AddPlayer(player);
 
             await repository.UpdateAsync(game, cancellationToken).ConfigureAwait(false);

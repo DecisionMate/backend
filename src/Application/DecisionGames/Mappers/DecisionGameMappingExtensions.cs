@@ -7,8 +7,8 @@ using static Riok.Mapperly.Abstractions.RequiredMappingStrategy;
 namespace DecisionMate.Application.DecisionGames.Mappers;
 
 [Mapper]
-[UseStaticMapper(typeof(OptionMapper))]
-public static partial class DecisionGameMapper
+[UseStaticMapper(typeof(OptionMappingExtensions))]
+public static partial class DecisionGameMappingExtensions
 {
 
     [MapperRequiredMapping(Target)]
