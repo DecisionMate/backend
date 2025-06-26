@@ -6,8 +6,16 @@ EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
+
 COPY ["DecisionMate.slnx", "/"]
 COPY ["nuget.config", "/"]
+RUN --mount=type=secret,id=github-username \
+    --mount=type=secret,id=github-token \
+    dotnet nuget update source Github \
+                    --username $(cat /run/secrets/github-username) \
+                    --password $(cat /run/secrets/github-token) \
+                    --store-password-in-clear-text \
+    
 WORKDIR /src
 COPY ["src/Application/Application.csproj", "Application/"]
 COPY ["src/Domain/Domain.csproj", "Domain/"]
@@ -16,14 +24,8 @@ COPY ["src/Integrations/Integrations.csproj", "Integrations/"]
 COPY ["src/Web/Web.csproj", "Web/"]
 COPY ["src/Directory.Build.props", "/"]
 COPY ["src/Directory.Packages.props", "/"]
-RUN --mount=type=secret,id=github-username \
-    --mount=type=secret,id=github-token \
-    dotnet nuget update source Github \
-                    --username $(cat /run/secrets/github-username) \
-                    --password $(cat /run/secrets/github-token) \
-                    --store-password-in-clear-text
 
-RUN dotnet restore "../DecisionMate.slnx"
+RUN dotnet restore "Web/Web.csproj"
 COPY src .
 WORKDIR /src/Web
 RUN dotnet build -c $BUILD_CONFIGURATION -o /app/build
