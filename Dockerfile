@@ -21,8 +21,9 @@ RUN --mount=type=secret,id=github-username \
     dotnet nuget update source Github \
                     --username $(cat /run/secrets/github-username) \
                     --password $(cat /run/secrets/github-token) \
-                    --store-password-in-clear-text
-RUN dotnet restore
+                    --store-password-in-clear-text \
+
+RUN dotnet restore "DecisionMate.slnx"
 COPY src .
 WORKDIR /src/Web
 RUN dotnet build -c $BUILD_CONFIGURATION -o /app/build
