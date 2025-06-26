@@ -7,13 +7,14 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+COPY ["*.slnx", "/"]
 COPY ["nuget.config", "/"]
-COPY ["Directory.Build.props", "/"]
-COPY ["Directory.Packages.props", "/"]
-COPY ["Web/Web.csproj", "Web/"]
-COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
-COPY ["Application/Application.csproj", "Application/"]
-COPY ["Domain/Domain.csproj", "Domain/"]
+COPY ["src/Directory.Build.props", "/"]
+COPY ["src/Directory.Packages.props", "/"]
+COPY ["src/Web/Web.csproj", "Web/"]
+COPY ["src/Infrastructure/Infrastructure.csproj", "Infrastructure/"]
+COPY ["src/Application/Application.csproj", "Application/"]
+COPY ["src/Domain/Domain.csproj", "Domain/"]
 RUN --mount=type=secret,id=github-username \
     --mount=type=secret,id=github-token \
     dotnet nuget update source Github \
@@ -21,7 +22,7 @@ RUN --mount=type=secret,id=github-username \
                     --password $(cat /run/secrets/github-token) \
                     --store-password-in-clear-text
 RUN dotnet restore "Web/Web.csproj"
-COPY . .
+COPY src .
 WORKDIR /src/Web
 RUN dotnet build "./Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
