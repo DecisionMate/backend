@@ -12,7 +12,7 @@ public sealed class UserProfileConfiguration : IEntityTypeConfiguration<UserProf
     public void Configure(EntityTypeBuilder<UserProfile> builder)
     {
         builder.ToTable("profiles");
-        
+
         builder.Property(x => x.Id).ValueGeneratedNever();
 
         builder.Property(o => o.UserName)
@@ -24,7 +24,7 @@ public sealed class UserProfileConfiguration : IEntityTypeConfiguration<UserProf
             .HasUrlToStringConversion()
             .HasMaxLength(Url.MaxLength);
 
-        builder.HasMany<UserProfile>()
+        builder.HasMany(x => x.Friends)
             .WithMany()
             .UsingEntity(join => join.ToTable("friends"));
     }

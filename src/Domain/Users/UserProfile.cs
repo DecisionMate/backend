@@ -9,16 +9,16 @@ public sealed class UserProfile : AggregateRoot
     public UserName UserName { get; set; }
     public Url? AvatarUrl { get; set; }
 
-    private readonly HashSet<Guid> _friends = [];
+    private readonly HashSet<UserProfile> _friends = [];
 
-    public IReadOnlySet<Guid> Friends
+    public IReadOnlySet<UserProfile> Friends
     {
         get => _friends;
         init => _friends = value.ToHashSet();
     }
 
-    public void AddFriend(Guid friend) => _friends.Add(friend);
-    public void RemoveFriend(Guid friend) => _friends.Remove(friend);
+    public void AddFriend(UserProfile friend) => _friends.Add(friend);
+    public void RemoveFriend(UserProfile friend) => _friends.Remove(friend);
 
     public static (UserProfile, UserProfileCreatedEvent) Create(Guid id, UserName userName, Url? avatarUrl)
     {
