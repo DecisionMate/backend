@@ -7,6 +7,7 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+COPY ["nuget.config", "/"]
 COPY ["Directory.Build.props", "/"]
 COPY ["Directory.Packages.props", "/"]
 COPY ["Web/Web.csproj", "Web/"]
