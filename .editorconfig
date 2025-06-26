@@ -83,7 +83,6 @@ resharper_web_config_wrong_module_highlighting = warning
 configure_await_analysis_mode = library
 
 dotnet_diagnostic.MA0007.severity = none
-
 # Report public classes without inheritors (default: false)
 MA0053.public_class_should_be_sealed = true
 MA0053.exceptions_should_be_sealed = true

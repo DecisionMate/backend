@@ -1,9 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <ItemGroup>
-      <ProjectReference Include="..\..\src\Domain\Domain.csproj" />
-    </ItemGroup>
-    <ItemGroup>
-      <PackageReference Include="xunit.v3" />
-      <PackageReference Remove="xunit" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Domain\Domain.csproj"/>
+  </ItemGroup>
 </Project>

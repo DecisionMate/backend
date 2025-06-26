@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <PackageReference Include="Dapper.EntityFramework" />
+    <PackageReference Include="Dapper" />
     <PackageReference Include="EFCore.NamingConventions" />
     <PackageReference Include="Geneirodan.EntityFrameworkCore" />
     <PackageReference Include="geneirodan.observability" />
