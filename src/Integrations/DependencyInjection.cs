@@ -1,4 +1,5 @@
-﻿using DecisionMate.Integrations.TheMovieDb;
+﻿using DecisionMate.Application.Categories.Providers;
+using DecisionMate.Integrations.TheMovieDb;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DecisionMate.Integrations;
@@ -10,7 +11,7 @@ public static class DependencyInjection
         services.AddOptions<TheMovieDbOptions>()
             .BindConfiguration(nameof(TheMovieDbOptions))
             .ValidateOnStart();
-        services.AddHttpClient<IMoviesCategoryProvider, MovieDbProvider>();
+        services.AddHttpClient<ICategoryProvider, MovieDbProvider>();
         return services;
     }
 }

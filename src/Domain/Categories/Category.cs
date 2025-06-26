@@ -1,4 +1,6 @@
-﻿using DecisionMate.Domain.Categories.Options;
+﻿using DecisionMate.Domain.Categories.Enums;
+using DecisionMate.Domain.Categories.Events;
+using DecisionMate.Domain.Categories.Options;
 using DecisionMate.Domain.Categories.ValueObjects;
 using DecisionMate.Domain.Common;
 
@@ -12,7 +14,7 @@ public sealed class Category : AggregateRoot
 
     private HashSet<Option> _options = [];
 
-    public bool ReadOnly { get; init; }
+    public CategoryType Type { get; init; }
     
     public CategoryName Name
     {
@@ -41,6 +43,7 @@ public sealed class Category : AggregateRoot
     public static (Category category, CategoryCreatedEvent @event) Create(
         CategoryName name,
         CategoryDescription description,
+        CategoryType type,
         IReadOnlySet<Option> options,
         Url? imageUrl
     )
@@ -50,6 +53,7 @@ public sealed class Category : AggregateRoot
             Id = Guid.CreateVersion7(),
             Name = name,
             Description = description,
+            Type = type,
             ImageUrl = imageUrl,
             Options = options
         };

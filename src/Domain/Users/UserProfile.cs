@@ -1,4 +1,5 @@
 ﻿using DecisionMate.Domain.Common;
+using DecisionMate.Domain.Users.Events;
 using DecisionMate.Domain.Users.ValueObjects;
 
 namespace DecisionMate.Domain.Users;
@@ -25,7 +26,7 @@ public sealed class UserProfile : AggregateRoot
         {
             Id = id,
             UserName = userName,
-            AvatarUrl = avatarUrl,
+            AvatarUrl = avatarUrl
         };
         var @event = new UserProfileCreatedEvent(id, userName, avatarUrl);
         profile.AddEvent(@event);

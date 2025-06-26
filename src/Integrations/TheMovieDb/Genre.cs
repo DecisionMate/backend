@@ -1,3 +1,6 @@
-﻿namespace DecisionMate.Integrations.TheMovieDb;
+﻿using JetBrains.Annotations;
 
-public record Genre(int Id, string Name);
+namespace DecisionMate.Integrations.TheMovieDb;
+
+[PublicAPI]
+public sealed record Genre(int Id, string Name);

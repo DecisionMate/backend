@@ -1,5 +1,8 @@
-﻿namespace DecisionMate.Integrations.TheMovieDb;
+﻿using JetBrains.Annotations;
 
+namespace DecisionMate.Integrations.TheMovieDb;
+
+[PublicAPI]
 public record Movie(
     bool Adult,
     string BackdropPath,

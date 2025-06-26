@@ -1,82 +1,66 @@
-﻿using System.Globalization;
-using System.Net.Http.Json;
-using System.Web;
+﻿using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Schema;
 using Ardalis.Result;
 using DecisionMate.Application.Categories.Mappers;
+using DecisionMate.Application.Categories.Providers;
 using DecisionMate.Domain.Categories;
 using DecisionMate.Domain.Categories.Options;
 using DecisionMate.Domain.Categories.Options.ValueObjects;
 using DecisionMate.Domain.Common;
 using Geneirodan.Abstractions.Repositories;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace DecisionMate.Integrations.TheMovieDb;
 
-public partial class MovieDbProvider(
+public sealed partial class MovieDbProvider(
     HttpClient httpClient,
     HybridCache cache,
     IOptions<TheMovieDbOptions> options,
-    ILogger<MovieDbProvider> logger) : IMoviesCategoryProvider
+    ILogger<MovieDbProvider> logger) : MovieCategoryProvider
 {
     private readonly TheMovieDbOptions _options = options.Value;
 
+    private readonly JsonSerializerOptions _serializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        TypeInfoResolver = JsonSerializerOptions.Default.TypeInfoResolver
+    };
+
+    public override async Task<CategoryTemplateModel> GetFullTemplateAsync(CancellationToken cancellationToken)
+    {
+        var genres =
+            await GetGenresAsync(Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName, cancellationToken)
+                .ConfigureAwait(false);
+        return GetShortTemplate() with
+        {
+            FiltersJson = _serializerOptions.GetJsonSchemaAsNode(typeof(IMovieDbFilters))["properties"],
+            Filters = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase) { { "genres", genres } }
+        };
+    }
+
     private async Task<PageModel<Movie>?> SearchMoviesAsync(
         int page,
-        string? withGenres = null,
-        string? withoutGenres = null,
-        string? withCountries = null,
-        string? withoutCountries = null,
-        int? startYear = null,
-        int? endYear = null,
+        IDictionary<string, string> filters,
         CancellationToken cancellationToken = default
     )
     {
-        var queryString = HttpUtility.ParseQueryString(string.Empty);
-        if (withGenres is not null)
-            queryString.Add(
-                name: "with_genres",
-                value: withGenres
-            );
+        var queryBuilder = new QueryBuilder(filters)
+        {
+            { "language", Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName }
+        };
 
-        if (withoutGenres is not null)
-            queryString.Add(
-                name: "with_genres",
-                value: withoutGenres
-            );
+        var requestUri = $"{_options.MovieEndpointUrl}?{queryBuilder.ToQueryString()}";
 
-        if (withCountries is not null)
-            queryString.Add(
-                name: "with_countries",
-                value: withCountries
-            );
-
-        if (withoutCountries is not null)
-            queryString.Add(
-                name: "without_countries",
-                value: withoutCountries
-            );
-
-        if (startYear is not null)
-            queryString.Add(
-                name: "release_date.gte",
-                value: $"{startYear.Value.ToString(CultureInfo.InvariantCulture)}-01-01"
-            );
-
-        if (endYear is not null)
-            queryString.Add(
-                name: "release_date.lte",
-                value: $"{endYear.Value.ToString(CultureInfo.InvariantCulture)}-01-01"
-            );
-
-        queryString.Add("language", Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName);
-        var message = new HttpRequestMessage(HttpMethod.Get, $"{_options.MovieEndpointUrl}?{queryString}");
+        var message = new HttpRequestMessage(HttpMethod.Get, requestUri);
         message.Headers.Add("Authorization", _options.ApiKey);
-        var response = await httpClient
-            .SendAsync(message, cancellationToken: cancellationToken)
-            .ConfigureAwait(false);
-        var pagedResult = await response.Content.ReadFromJsonAsync<MovieResponse>(cancellationToken: cancellationToken)
+
+        var response = await httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+
+        var pagedResult = await response.Content.ReadFromJsonAsync<MovieResponse>(cancellationToken)
             .ConfigureAwait(false);
         if (pagedResult is not null)
             return new PageModel<Movie>
@@ -91,8 +75,8 @@ public partial class MovieDbProvider(
         return null;
     }
 
-    public ValueTask<IReadOnlyCollection<Genre>?> GetGenresAsync(
-        string lang = "en",
+    private ValueTask<IReadOnlyCollection<Genre>> GetGenresAsync(
+        string lang,
         CancellationToken cancellationToken = default
     ) => cache.GetOrCreateAsync(
         key: $"TheMovieDb-Genres-{lang}",
@@ -100,21 +84,27 @@ public partial class MovieDbProvider(
         cancellationToken: cancellationToken
     );
 
-    private async ValueTask<IReadOnlyCollection<Genre>?> GetGenresInnerAsync(
-        string lang = "en",
+    private async ValueTask<IReadOnlyCollection<Genre>> GetGenresInnerAsync(
+        string lang,
         CancellationToken cancellationToken = default
     )
     {
-        var queryString = HttpUtility.ParseQueryString(_options.GenreEndpointUrl);
-        queryString.Add("language", lang);
-        var pagedResult = await httpClient
-            .GetFromJsonAsync<GenresResponse>(queryString.ToString(), cancellationToken: cancellationToken)
+        var queryBuilder = new QueryBuilder { { "language", lang } };
+
+        var requestUri = $"{_options.GenreEndpointUrl}?{queryBuilder.ToQueryString()}";
+
+        var message = new HttpRequestMessage(HttpMethod.Get, requestUri);
+        message.Headers.Add("Authorization", _options.ApiKey);
+
+        var response = await httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        var pagedResult = await response.Content.ReadFromJsonAsync<GenresResponse>(cancellationToken)
             .ConfigureAwait(false);
+
         if (pagedResult is not null)
             return pagedResult.Genres;
 
         LogGenresError();
-        return null;
+        return [];
     }
 
     [LoggerMessage(LogLevel.Error, "Unable to fetch genres")]
@@ -123,44 +113,24 @@ public partial class MovieDbProvider(
     [LoggerMessage(LogLevel.Error, "Unable to fetch movies")]
     private partial void LogMoviesError();
 
-    public async Task<Result<CategoryModel>> GetCategoryAsync(
+    public override async Task<Result<CategoryModel>> GetCategoryAsync(
         int count,
-        string? withGenres = null,
-        string? withoutGenres = null,
-        string? withCountries = null,
-        string? withoutCountries = null,
-        int? startYear = null,
-        int? endYear = null,
+        IDictionary<string, string> filters,
         CancellationToken cancellationToken = default
     )
     {
-        var result = await SearchMoviesAsync(
-            1,
-            withGenres,
-            withoutGenres,
-            withCountries,
-            withoutCountries,
-            startYear,
-            endYear,
-            cancellationToken
-        ).ConfigureAwait(false);
+        NormalizeFilters(filters);
+
+        var result = await SearchMoviesAsync(1, filters, cancellationToken).ConfigureAwait(false);
 
         if (result is null)
             return Result.Unavailable();
 
         HashSet<Option> set = [];
-        do
+        while (set.Count < count && set.Count < result.TotalCount)
         {
-            result = await SearchMoviesAsync(
-                page: Random.Shared.Next(1, result.TotalPages),
-                withGenres: withGenres,
-                withoutGenres: withoutGenres,
-                withCountries: withCountries,
-                withoutCountries: withoutCountries,
-                startYear: startYear,
-                endYear: endYear,
-                cancellationToken: cancellationToken
-            ).ConfigureAwait(false);
+            var page = Random.Shared.Next(1, result.TotalPages);
+            result = await SearchMoviesAsync(page, filters, cancellationToken).ConfigureAwait(false);
 
             if (result is null)
                 return Result.Unavailable();
@@ -168,6 +138,9 @@ public partial class MovieDbProvider(
             var id = 0;
             foreach (var movie in result.Items)
             {
+                if (set.Count >= count)
+                    break;
+                
                 var option = new Option
                 {
                     Id = ++id,
@@ -178,7 +151,7 @@ public partial class MovieDbProvider(
                 };
                 set.Add(option);
             }
-        } while (set.Count < count);
+        }
 
         return new CategoryModel(
             Id: Guid.CreateVersion7(),
@@ -187,5 +160,15 @@ public partial class MovieDbProvider(
             ImageUrl: _options.CategoryImageUrl,
             Options: set.Map()
         );
+    }
+
+    private static void NormalizeFilters(IDictionary<string, string> filters)
+    {
+        foreach (var (oldKey, newKey) in IMovieDbFilters.Mappings())
+            if (filters.TryGetValue(oldKey, out var value))
+            {
+                filters[newKey] = value;
+                filters.Remove(oldKey);
+            }
     }
 }

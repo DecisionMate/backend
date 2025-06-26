@@ -1,10 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Ardalis.Result;
 using DecisionMate.Application.Categories.Commands;
 using DecisionMate.Application.Categories.Queries;
 using DecisionMate.Application.Common;
 using DecisionMate.Domain.Categories;
-using DecisionMate.Integrations;
+using DecisionMate.Domain.Categories.Enums;
 using Geneirodan.Abstractions.Repositories;
 using Geneirodan.AspNetCore;
 using MediatR;
@@ -44,26 +43,57 @@ public static class CategoryEndpoints
         idGroup.MapDelete("/", DeleteCategory)
             .Produces(StatusCodes.Status200OK);
 
-        group.MapGet("/movies", GetMovieCategory)
+        var templatesGroup = group.MapGroup("/templates");
+
+        templatesGroup.MapGet("/", GetTemplates)
+            .Produces<IReadOnlyCollection<CategoryTemplateModel>>();
+
+        var templateTypeGroup = templatesGroup.MapGroup("/{type}");
+        templateTypeGroup.MapGet("/", GetTemplate)
+            .Produces<CategoryTemplateModel>();
+        
+        templateTypeGroup.MapGet("/category", GetPremadeCategory)
             .Produces<CategoryModel>();
 
         return group;
     }
 
-    private static async Task<IResult> GetMovieCategory(
-        [FromServices] IMoviesCategoryProvider provider,
-        int count,
-        string? withGenres = null,
-        string? withoutGenres = null,
-        string? withCountries = null,
-        string? withoutCountries = null,
-        int? startYear = null,
-        int? endYear = null,
-        CancellationToken cancellationToken = default)
+    private static async Task<IResult> GetTemplates(
+        [FromServices] ISender sender,
+        CancellationToken token = default
+    )
     {
-        var category = await provider.GetCategoryAsync(count, withGenres, withoutGenres, withCountries,
-            withoutCountries, startYear, endYear, cancellationToken);
-        return category.MapResult();
+        var query = new GetTemplatesQuery();
+        var response = await sender.Send(query, token);
+        return response.MapResult();
+    }
+
+    private static async Task<IResult> GetTemplate(
+        [FromRoute] CategoryType type,
+        [FromServices] ISender sender,
+        CancellationToken token = default
+    )
+    {
+        var query = new GetTemplateByTypeQuery(type);
+        var response = await sender.Send(query, token);
+        return response.MapResult();
+    }
+
+    private static async Task<IResult> GetPremadeCategory(
+        HttpContext httpContext,
+        [FromRoute] CategoryType type,
+        [FromQuery] int count,
+        [FromServices] ISender sender,
+        CancellationToken token = default
+    )
+    {
+        var filters = httpContext.Request.Query
+            .ToDictionary(x => x.Key, x => x.Value.ToString(), StringComparer.OrdinalIgnoreCase);
+        filters.Remove(nameof(count));
+        
+        var query = new GetPremadeCategoryByTypeQuery(type, count, filters);
+        var response = await sender.Send(query, token);
+        return response.MapResult();
     }
 
     private static async Task<IResult> GetCategory(
@@ -85,7 +115,7 @@ public static class CategoryEndpoints
         CancellationToken token = default
     )
     {
-        var query = new GetCategoriesQuery(searchTerm, new Pagination(page, pageSize));
+        var query = new GetCustomCategoriesQuery(searchTerm, new Pagination(page, pageSize));
         var result = await sender.Send(query, token);
         return result.MapResult();
     }

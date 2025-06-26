@@ -1,18 +1,21 @@
-﻿namespace DecisionMate.Domain.Categories.Metadatas;
+﻿using JetBrains.Annotations;
 
+namespace DecisionMate.Domain.Categories.Metadatas;
+
+[PublicAPI]
 public record FilmMetadata(
-    bool adult,
+    bool Adult,
     string BackdropPath,
     int[] GenreIds,
-    int id,
+    int Id,
     string OriginalLanguage,
     string OriginalTitle,
-    string overview,
-    double popularity,
+    string Overview,
+    double Popularity,
     string PosterPath,
     string ReleaseDate,
-    string title,
-    bool video,
+    string Title,
+    bool Video,
     double VoteAverage,
     int VoteCount
 ) : Metadata;

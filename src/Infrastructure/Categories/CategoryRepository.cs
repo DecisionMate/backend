@@ -4,6 +4,7 @@ using DecisionMate.Application.Categories;
 using DecisionMate.Application.Categories.Mappers;
 using DecisionMate.Application.Common;
 using DecisionMate.Domain.Categories;
+using DecisionMate.Domain.Categories.Enums;
 using Geneirodan.Abstractions.Repositories;
 using Geneirodan.EntityFrameworkCore;
 using JetBrains.Annotations;
@@ -19,14 +20,13 @@ public sealed class CategoryRepository(DbContext context) : Repository<Category,
     public override Task<Category?> FindAsync(Guid id, CancellationToken token = default) =>
         base.FindAsync(Set.Include(x => x.Options), id, token);
 
-    public async Task<Result<PageModel<CategoryListModel>>> GetCategories(
-        string searchTerm,
+    public async Task<Result<PageModel<CategoryListModel>>> GetCategories(string searchTerm,
         IPagination pagination,
-        CancellationToken cancellationToken
-    )
+        CategoryType type,
+        CancellationToken cancellationToken)
     {
         var dbConnection = _context.Database.GetDbConnection();
-        var command = CreateSearchCommand(searchTerm, pagination, cancellationToken);
+        var command = CreateSearchCommand(searchTerm, pagination,type, cancellationToken);
         var models = await dbConnection.QueryAsync<CategoryListModel>(command).ConfigureAwait(false);
         var countCommand = CreateCountCommand(searchTerm, cancellationToken);
         return new PageModel<CategoryListModel>
@@ -41,13 +41,14 @@ public sealed class CategoryRepository(DbContext context) : Repository<Category,
     private static CommandDefinition CreateSearchCommand(
         string name,
         IPagination pagination,
+        CategoryType type,
         CancellationToken cancellationToken
     ) =>
         new(
             commandText: """
                          SELECT id, name, description, image_url as imageUrl
                          FROM categories
-                         WHERE name ILIKE (@name)
+                         WHERE type = @type AND name ILIKE (@name)
                          LIMIT @pageSize 
                          OFFSET @page
                          """,
@@ -55,7 +56,8 @@ public sealed class CategoryRepository(DbContext context) : Repository<Category,
             {
                 name = $"%{name}%",
                 page = (pagination.Page - 1) * pagination.PageSize,
-                pageSize = pagination.PageSize
+                pageSize = pagination.PageSize,
+                type
             },
             cancellationToken: cancellationToken
         );

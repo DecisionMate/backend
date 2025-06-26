@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json.Serialization;
 using DecisionMate.Application;
 using DecisionMate.Domain.DecisionGames.Events;
 using DecisionMate.Infrastructure;
@@ -27,6 +28,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddStackExchangeRedisCache(o => o.Configuration = configuration.GetConnectionString("Redis"));
 builder.Services.AddSignalR();
 builder.Services
+    .ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()))
     .AddOpenApi(o =>
     {
         o.OpenApiVersion = OpenApiSpecVersion.OpenApi3_0;

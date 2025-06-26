@@ -2,6 +2,7 @@
 using DecisionMate.Application.Categories.Contracts;
 using DecisionMate.Application.Categories.Mappers;
 using DecisionMate.Domain.Categories;
+using DecisionMate.Domain.Categories.Enums;
 using DecisionMate.Domain.Categories.ValueObjects;
 using DecisionMate.Domain.Common;
 using FluentValidation;
@@ -15,6 +16,7 @@ namespace DecisionMate.Application.Categories.Commands;
 public sealed record CreateCategoryCommand(
     string Name,
     string Description,
+    CategoryType Type,
     OptionContract[] Options,
     string? ImageUrl
 ) : ICommand<CategoryModel>
@@ -28,6 +30,7 @@ public sealed record CreateCategoryCommand(
             var (entity, @event) = Category.Create(
                 name: new CategoryName(request.Name),
                 description: new CategoryDescription(request.Description),
+                type: request.Type,
                 options: request.Options.Map(),
                 imageUrl: Url.Create(request.ImageUrl)
             );
