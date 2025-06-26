@@ -14,7 +14,7 @@ RUN --mount=type=secret,id=github-username \
     dotnet nuget update source Github \
                     --username $(cat /run/secrets/github-username) \
                     --password $(cat /run/secrets/github-token) \
-                    --store-password-in-clear-text \
+                    --store-password-in-clear-text
     
 WORKDIR /src
 COPY ["src/Application/Application.csproj", "Application/"]
