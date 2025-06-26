@@ -1,4 +1,5 @@
 ﻿using Ardalis.Result;
+using DecisionMate.Application.Common.Resources;
 using DecisionMate.Domain.Categories;
 using DecisionMate.Domain.Categories.Enums;
 
@@ -11,7 +12,7 @@ public abstract class MovieCategoryProvider : ICategoryProvider
     public abstract Task<CategoryTemplateModel> GetFullTemplateAsync(CancellationToken cancellationToken);
 
     public virtual CategoryTemplateModel GetShortTemplate() => new(
-        Name: Common.Resources.Messages.MoviesCategoryName,
+        Name: CategoryTemplates.MoviesCategoryName,
         Description: null,
         ImageUrl: null,
         Type: CategoryType,

@@ -13,7 +13,9 @@
   &lt;Solution /&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=Miscellaneous_0020Files_002FDecisionMate_002EApplication_002ECommon_002EResources_002EMessages/@EntryIndexedValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=src_002FApplication_002FCommon_002FResources_002FCategoryTemplates/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=src_002FApplication_002FCommon_002FResources_002FErrorMessages/@EntryIndexedValue">False</s:Boolean>
-	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=src_002FApplication_002FCommon_002FResources_002FMessages/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=src_002FApplication_002FCommon_002FResources_002FMessages/@EntryIndexedValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=src_002FApplication_002FCommon_002FResources_002FMessages/@EntryIndexRemoved">True</s:Boolean>
 	
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/Initialized/@EntryValue">True</s:Boolean></wpf:ResourceDictionary>
