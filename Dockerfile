@@ -9,12 +9,13 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["*.slnx", "/"]
 COPY ["nuget.config", "/"]
-COPY ["src/Directory.Build.props", "/"]
-COPY ["src/Directory.Packages.props", "/"]
-COPY ["src/Web/Web.csproj", "Web/"]
-COPY ["src/Infrastructure/Infrastructure.csproj", "Infrastructure/"]
 COPY ["src/Application/Application.csproj", "Application/"]
 COPY ["src/Domain/Domain.csproj", "Domain/"]
+COPY ["src/Infrastructure/Infrastructure.csproj", "Infrastructure/"]
+COPY ["src/Integrations/Integrations.csproj", "Integrations/"]
+COPY ["src/Web/Web.csproj", "Web/"]
+COPY ["src/Directory.Build.props", "/"]
+COPY ["src/Directory.Packages.props", "/"]
 RUN --mount=type=secret,id=github-username \
     --mount=type=secret,id=github-token \
     dotnet nuget update source Github \

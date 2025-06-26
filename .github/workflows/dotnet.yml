@@ -23,7 +23,6 @@ jobs:
       
       - name: Update Github packages
         run: |
-          cd src
           dotnet nuget update source Github \
             --username ${{ secrets.PACKAGES_USERNAME }} \
             --password ${{ secrets.PACKAGES_TOKEN }} \
