@@ -22,10 +22,10 @@ RUN --mount=type=secret,id=github-username \
                     --username $(cat /run/secrets/github-username) \
                     --password $(cat /run/secrets/github-token) \
                     --store-password-in-clear-text
-RUN dotnet restore "Web/Web.csproj"
+RUN dotnet restore
 COPY src .
 WORKDIR /src/Web
-RUN dotnet build "./Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
