@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Globalization;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Schema;
 using Ardalis.Result;
@@ -50,17 +51,18 @@ public sealed partial class MovieDbProvider(
     {
         var queryBuilder = new QueryBuilder(filters)
         {
+            { "page", page.ToString(CultureInfo.InvariantCulture) },
             { "language", Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName }
         };
 
-        var requestUri = $"{_options.MovieEndpointUrl}?{queryBuilder.ToQueryString()}";
+        var requestUri = $"{_options.MovieEndpointUrl}{queryBuilder.ToQueryString()}";
 
         var message = new HttpRequestMessage(HttpMethod.Get, requestUri);
         message.Headers.Add("Authorization", _options.ApiKey);
 
         var response = await httpClient.SendAsync(message, cancellationToken).ConfigureAwait(false);
 
-        var pagedResult = await response.Content.ReadFromJsonAsync<MovieResponse>(cancellationToken)
+        var pagedResult = await response.Content.ReadFromJsonAsync<MovieResponse>(_serializerOptions, cancellationToken)
             .ConfigureAwait(false);
         if (pagedResult is not null)
             return new PageModel<Movie>
@@ -91,7 +93,7 @@ public sealed partial class MovieDbProvider(
     {
         var queryBuilder = new QueryBuilder { { "language", lang } };
 
-        var requestUri = $"{_options.GenreEndpointUrl}?{queryBuilder.ToQueryString()}";
+        var requestUri = $"{_options.GenreEndpointUrl}{queryBuilder.ToQueryString()}";
 
         var message = new HttpRequestMessage(HttpMethod.Get, requestUri);
         message.Headers.Add("Authorization", _options.ApiKey);
@@ -140,7 +142,7 @@ public sealed partial class MovieDbProvider(
             {
                 if (set.Count >= count)
                     break;
-                
+
                 var option = new Option
                 {
                     Id = ++id,

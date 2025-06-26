@@ -15,8 +15,7 @@ COPY ["Application/Application.csproj", "Application/"]
 COPY ["Domain/Domain.csproj", "Domain/"]
 RUN --mount=type=secret,id=github-username \
     --mount=type=secret,id=github-token \
-    dotnet nuget add source "https://nuget.pkg.github.com/Geneirodan/index.json" \
-                    --name Github \
+    dotnet nuget update source Github \
                     --username $(cat /run/secrets/github-username) \
                     --password $(cat /run/secrets/github-token) \
                     --store-password-in-clear-text
